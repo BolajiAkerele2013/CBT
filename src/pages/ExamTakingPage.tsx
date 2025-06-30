@@ -195,18 +195,21 @@ export function ExamTakingPage() {
 
   const handleVerifyCode = async (code: string) => {
     if (!code.trim()) {
-      alert('Please enter your access code')
+      setUserValidationError('Please enter your access code')
+      setLoading(false)
       return
     }
 
     if (!user) {
       setUserValidationError('You must be logged in to access this exam. Please log in with your account.')
+      setLoading(false)
       return
     }
 
     try {
       setVerifyingCode(true)
       setUserValidationError(null)
+      setLoading(true)
       
       // Verify code with Supabase
       const { data: codeData, error } = await supabase
@@ -219,12 +222,14 @@ export function ExamTakingPage() {
       if (error) {
         console.error('Database error:', error)
         setUserValidationError('Failed to verify access code. Please try again.')
+        setLoading(false)
         return
       }
 
       // Check if any matching codes were found
       if (!codeData || codeData.length === 0) {
         setUserValidationError('Invalid or expired access code. Please check your code and try again.')
+        setLoading(false)
         return
       }
 
@@ -234,6 +239,7 @@ export function ExamTakingPage() {
       // Check if code has expired
       if (code_record.expires_at && new Date(code_record.expires_at) < new Date()) {
         setUserValidationError('This access code has expired. Please contact your administrator for a new code.')
+        setLoading(false)
         return
       }
 
@@ -243,6 +249,7 @@ export function ExamTakingPage() {
           `This access code is assigned to ${code_record.user_email}, but you are logged in as ${user.email}. ` +
           'Please log in with the correct account or contact your administrator for the right access code.'
         )
+        setLoading(false)
         return
       }
 
@@ -257,15 +264,18 @@ export function ExamTakingPage() {
         setUserValidationError(
           'Your account is not properly registered in the system. Please contact your administrator to set up your account before taking exams.'
         )
+        setLoading(false)
         return
       }
 
       // Store the UUID of the exam code record
       setCodeId(code_record.id)
       setCodeVerified(true)
+      // Loading will be handled by the loadExamData effect
     } catch (error) {
       console.error('Verification error:', error)
       setUserValidationError('Failed to verify access code. Please try again.')
+      setLoading(false)
     } finally {
       setVerifyingCode(false)
     }
@@ -440,18 +450,6 @@ export function ExamTakingPage() {
     return null // Component will redirect via useEffect
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-secondary-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-secondary-600">Loading exam...</p>
-        </div>
-      </div>
-    )
-  }
-
   // User validation error state
   if (userValidationError) {
     return (
@@ -480,6 +478,7 @@ export function ExamTakingPage() {
                   setUserValidationError(null)
                   setCodeVerified(false)
                   setAccessCode('')
+                  setLoading(false)
                 }}
                 className="btn-outline w-full px-4 py-2"
               >
@@ -487,6 +486,18 @@ export function ExamTakingPage() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-secondary-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-secondary-600">Loading exam...</p>
         </div>
       </div>
     )
