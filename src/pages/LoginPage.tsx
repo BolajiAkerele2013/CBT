@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
   const { user, signIn, signUp, loading } = useAuth()
+  const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,8 +14,13 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Get redirect URL from search params
+  const redirectUrl = searchParams.get('redirect')
+
+  // If user is already logged in, redirect them
   if (user) {
-    return <Navigate to="/dashboard" replace />
+    // If there's a redirect URL, use it; otherwise go to dashboard
+    return <Navigate to={redirectUrl || "/dashboard"} replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +38,9 @@ export function LoginPage() {
 
       if (result.error) {
         setError(result.error.message)
+      } else if (isLogin && redirectUrl) {
+        // After successful login, redirect to the original URL
+        window.location.href = redirectUrl
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -61,6 +70,13 @@ export function LoginPage() {
           <p className="mt-2 text-center text-sm text-secondary-600">
             Computer-Based Testing System
           </p>
+          {redirectUrl && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700 text-center">
+                Please log in to access your exam
+              </p>
+            </div>
+          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

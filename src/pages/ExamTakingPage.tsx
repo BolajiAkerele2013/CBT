@@ -57,12 +57,17 @@ export function ExamTakingPage() {
   // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!user) {
-      navigate('/login')
+      // If there's a code in the URL, preserve it in the redirect
+      const codeFromUrl = searchParams.get('code')
+      const redirectUrl = codeFromUrl 
+        ? `/login?redirect=${encodeURIComponent(`/exam/${examId}/take?code=${codeFromUrl}`)}`
+        : '/login'
+      navigate(redirectUrl)
       return
     }
-  }, [user, navigate])
+  }, [user, navigate, examId, searchParams])
 
-  // Get code from URL parameters if available
+  // Get code from URL parameters and auto-verify if available
   useEffect(() => {
     const codeFromUrl = searchParams.get('code')
     if (codeFromUrl && user) {
@@ -203,7 +208,7 @@ export function ExamTakingPage() {
       setVerifyingCode(true)
       setUserValidationError(null)
       
-      // Verify code with Supabase - remove .single() to avoid PGRST116 error
+      // Verify code with Supabase
       const { data: codeData, error } = await supabase
         .from('exam_codes')
         .select('*')
@@ -213,13 +218,13 @@ export function ExamTakingPage() {
 
       if (error) {
         console.error('Database error:', error)
-        alert('Failed to verify access code. Please try again.')
+        setUserValidationError('Failed to verify access code. Please try again.')
         return
       }
 
       // Check if any matching codes were found
       if (!codeData || codeData.length === 0) {
-        alert('Invalid or expired access code. Please check your code and try again.')
+        setUserValidationError('Invalid or expired access code. Please check your code and try again.')
         return
       }
 
@@ -228,7 +233,7 @@ export function ExamTakingPage() {
 
       // Check if code has expired
       if (code_record.expires_at && new Date(code_record.expires_at) < new Date()) {
-        alert('This access code has expired. Please contact your administrator for a new code.')
+        setUserValidationError('This access code has expired. Please contact your administrator for a new code.')
         return
       }
 
@@ -260,7 +265,7 @@ export function ExamTakingPage() {
       setCodeVerified(true)
     } catch (error) {
       console.error('Verification error:', error)
-      alert('Failed to verify access code. Please try again.')
+      setUserValidationError('Failed to verify access code. Please try again.')
     } finally {
       setVerifyingCode(false)
     }
@@ -458,7 +463,14 @@ export function ExamTakingPage() {
             <p className="text-secondary-600 mb-4">{userValidationError}</p>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => {
+                  // Preserve the exam URL with code for after login
+                  const codeFromUrl = searchParams.get('code')
+                  const redirectUrl = codeFromUrl 
+                    ? `/login?redirect=${encodeURIComponent(`/exam/${examId}/take?code=${codeFromUrl}`)}`
+                    : '/login'
+                  navigate(redirectUrl)
+                }}
                 className="btn-primary w-full px-4 py-2"
               >
                 Go to Login
