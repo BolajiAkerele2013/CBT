@@ -246,8 +246,7 @@ export function ExamTakingPage() {
       // CRITICAL: Check if user email matches the code assignment
       if (code_record.user_email !== user.email) {
         setUserValidationError(
-          `This access code is assigned to ${code_record.user_email}, but you are logged in as ${user.email}. ` +
-          'Please log in with the correct account or contact your administrator for the right access code.'
+          'This access code is not assigned to your account. Please use the correct access code for your account or contact your administrator.'
         )
         setLoading(false)
         return
