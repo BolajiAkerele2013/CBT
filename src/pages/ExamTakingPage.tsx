@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Clock, AlertCircle, CheckCircle, Key, Calendar, CalendarX, UserX } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -142,20 +142,20 @@ export function ExamTakingPage() {
       }
 
       // Process and flatten questions
-      const subjects: Subject[] = exam.subjects?.map(subject => ({
-        id: subject.id,
-        name: subject.name,
-        time_limit: subject.time_limit,
-        pass_mark: subject.pass_mark || 60,
-        questions: subject.questions?.map(q => ({
-          id: q.id,
-          type: q.type,
-          question_text: q.question_text,
-          options: q.options || [],
-          correct_answers: q.correct_answers,
-          points: q.points
-        })) || []
-      })) || []
+    const subjects: Subject[] = exam.subjects?.map((subject: Subject) => ({
+      id: subject.id,
+      name: subject.name,
+      time_limit: subject.time_limit,
+      pass_mark: subject.pass_mark || 60,
+      questions: subject.questions?.map((q: Question) => ({
+        id: q.id,
+        type: q.type,
+        question_text: q.question_text,
+        options: q.options || [],
+        correct_answers: q.correct_answers,
+        points: q.points,
+      })) || [],
+    })) || [];
 
       // Flatten all questions for easier navigation
       const flatQuestions = subjects.flatMap(subject => subject.questions)

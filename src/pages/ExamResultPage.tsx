@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { 
   CheckCircle, 
   XCircle, 
@@ -9,7 +9,6 @@ import {
   Printer,
   Home,
   BarChart3,
-  Award,
   Target,
   User
 } from 'lucide-react'
@@ -43,7 +42,6 @@ interface ExamResult {
 
 export function ExamResultPage() {
   const { examId } = useParams()
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const [result, setResult] = useState<ExamResult | null>(null)
@@ -154,9 +152,9 @@ export function ExamResultPage() {
           } else if (question.type === 'fill_blank' || question.type === 'short_answer') {
             // For text answers, check if user answer matches any correct answer (case insensitive)
             const userAnswerLower = userAnswer.toLowerCase().trim()
-            const hasCorrectAnswer = question.correct_answers.some(correctAnswer => 
+            const hasCorrectAnswer = question.correct_answers.some((correctAnswer: string) => 
               correctAnswer.toLowerCase().trim() === userAnswerLower
-            )
+            );
             if (hasCorrectAnswer) {
               subjectScore += question.points
             }
@@ -260,7 +258,7 @@ export function ExamResultPage() {
   return (
     <div className="min-h-screen bg-secondary-50">
       {/* Print Styles */}
-      <style jsx>{`
+      <style>{`
         @media print {
           .no-print { display: none !important; }
           .print-only { display: block !important; }

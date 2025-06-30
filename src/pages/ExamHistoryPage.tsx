@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   Clock, 
@@ -10,7 +10,6 @@ import {
   AlertCircle,
   BarChart3,
   FileText,
-  Target,
   User
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'

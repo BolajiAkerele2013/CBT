@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Save, Plus, Trash2, Settings, CheckCircle, Edit, Eye, QrCode, Users as UsersIcon } from 'lucide-react'
+import { Save, Plus, Trash2, Settings, CheckCircle, Edit, QrCode} from 'lucide-react'
 import { useExams } from '../hooks/useExams'
-import { useQuestions } from '../hooks/useQuestions'
-import { useExamCodes } from '../hooks/useExamCodes'
 import { QuestionModal } from '../components/QuestionModal'
 import { ExamCodesModal } from '../components/ExamCodesModal'
 import { supabase } from '../lib/supabase'
@@ -40,16 +38,29 @@ export function ExamCreationPage() {
   const [loadingQuestions, setLoadingQuestions] = useState<Record<string, boolean>>({})
   const [dataLoaded, setDataLoaded] = useState(false) // Track if initial data has been loaded
 
-  const [examData, setExamData] = useState({
-    title: '',
-    description: '',
-    time_limit: 60,
-    shuffle_questions: false,
-    show_results: true,
-    start_date: '',
-    end_date: '',
-    status: 'draft' as const
-  })
+type ExamStatus = 'draft' | 'published' | 'archived';
+
+interface ExamData {
+  title: string;
+  description: string;
+  time_limit: number;
+  shuffle_questions: boolean;
+  show_results: boolean;
+  start_date: string;
+  end_date: string;
+  status: ExamStatus;
+}
+
+const [examData, setExamData] = useState<ExamData>({
+  title: '',
+  description: '',
+  time_limit: 60,
+  shuffle_questions: false,
+  show_results: true,
+  start_date: '',
+  end_date: '',
+  status: 'draft'
+});
 
   const [subjects, setSubjects] = useState<Subject[]>([
     {
@@ -231,11 +242,12 @@ export function ExamCreationPage() {
         status: 'draft' as const
       }
 
-      const subjectsPayload = subjects.map(subject => ({
-        name: subject.name,
-        time_limit: subject.time_limit,
-        pass_mark: subject.pass_mark
-      }))
+    const subjectsPayload = subjects.map((subject, index) => ({
+      name: subject.name,
+      time_limit: subject.time_limit,
+      pass_mark: subject.pass_mark,
+      order_index: index // required
+    }));
 
       if (examId) {
         await updateExam(examId, examPayload, subjectsPayload)
@@ -336,18 +348,20 @@ export function ExamCreationPage() {
           status: 'draft' as const
         }
 
-        const subjectsPayload = subjects.map(subject => ({
+        const subjectsPayload = subjects.map((subject, index) => ({
           name: subject.name,
           time_limit: subject.time_limit,
-          pass_mark: subject.pass_mark
-        }))
+          pass_mark: subject.pass_mark,
+          order_index: index // required
+        }));
 
         const newExam = await createExam(examPayload, subjectsPayload)
         currentExamId = newExam.id
       }
 
       // Publish the exam
-      await publishExam(currentExamId)
+      if (!currentExamId) return;
+      await publishExam(currentExamId);
       setExamData(prev => ({ ...prev, status: 'published' }))
       showMessage('Exam published successfully! Students can now access it with exam codes.', 'success')
 

@@ -1,25 +1,19 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useQuestionBank } from '../hooks/useQuestionBank'
 import { useExams } from '../hooks/useExams'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
 import { 
   Search, 
-  Filter, 
   Copy, 
-  Eye, 
   BookOpen,
   AlertCircle,
   Upload,
   Download,
-  FileText,
-  Plus,
   X,
   CheckCircle
 } from 'lucide-react'
 
 export function QuestionBankPage() {
-  const { user } = useAuth()
   const { questions, loading, error, copyQuestionToSubject } = useQuestionBank()
   const { exams } = useExams()
   const [searchTerm, setSearchTerm] = useState('')
