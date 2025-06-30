@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { AvailableExamsPage } from './pages/AvailableExamsPage'
 import { ExamCreationPage } from './pages/ExamCreationPage'
 import { ExamTakingPage } from './pages/ExamTakingPage'
 import { ExamResultPage } from './pages/ExamResultPage'
@@ -30,6 +31,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/available-exams" element={<AvailableExamsPage />} />
                     <Route path="/exam-history" element={<ExamHistoryPage />} />
                     <Route path="/exams/create" element={<ExamCreationPage />} />
                     <Route path="/exams/:examId/edit" element={<ExamCreationPage />} />
