@@ -674,7 +674,7 @@ const [examData, setExamData] = useState<ExamData>({
             </div>
             
             <div className="space-y-4">
-              {subjects.map((subject, index) => (
+              {subjects.map((subject, _index) => (
                 <div key={subject.id} className="border border-secondary-200 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
                     <input

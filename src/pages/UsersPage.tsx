@@ -2,11 +2,9 @@ import { useState } from 'react'
 import { useUsers } from '../hooks/useUsers'
 import { 
   Users as UsersIcon, 
-  Shield, 
-  Edit, 
+  Shield,
   Search,
-  AlertCircle,
-  CheckCircle
+  AlertCircle
 } from 'lucide-react'
 
 export function UsersPage() {
