@@ -198,10 +198,10 @@ export function ResultsPage() {
                         <User className="h-5 w-5 text-secondary-400 mr-3" />
                         <div>
                           <div className="text-sm font-bold text-secondary-900">
-                            {attempt.profiles.full_name || 'Name Not Available'}
+                            {attempt.profiles?.full_name || 'Name Not Available'}
                           </div>
                           <div className="text-sm text-secondary-500">
-                            {attempt.profiles.email}
+                            {attempt.profiles?.email}
                           </div>
                         </div>
                       </div>
