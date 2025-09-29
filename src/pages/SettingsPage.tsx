@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import { 
   User, 
   Lock, 
@@ -94,14 +95,38 @@ export function SettingsPage() {
       return
     }
 
+    if (!securityData.currentPassword.trim()) {
+      showMessage('Please enter your current password', 'error')
+      return
+    }
+
     try {
       setSaving(true)
-      // TODO: Implement password update API call
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      
+      // First, verify the current password by attempting to sign in
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user!.email!,
+        password: securityData.currentPassword
+      })
+
+      if (verifyError) {
+        throw new Error('Current password is incorrect')
+      }
+
+      // Update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: securityData.newPassword
+      })
+
+      if (updateError) {
+        throw updateError
+      }
+
       setSecurityData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       showMessage('Password updated successfully!', 'success')
     } catch (err) {
-      showMessage('Failed to update password', 'error')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update password'
+      showMessage(errorMessage, 'error')
     } finally {
       setSaving(false)
     }
