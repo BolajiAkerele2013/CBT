@@ -75,7 +75,7 @@ export function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-secondary-900">Dashboard</h1>
-            <p className="text-secondary-600">Welcome back, {user?.email}</p>
+            <p className="text-secondary-600">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
           </div>
         </div>
         
@@ -92,7 +92,7 @@ export function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-secondary-900">Dashboard</h1>
-            <p className="text-secondary-600">Welcome back, {user?.email}</p>
+            <p className="text-secondary-600">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
           </div>
         </div>
         
@@ -115,7 +115,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-secondary-900">Dashboard</h1>
-          <p className="text-secondary-600">Welcome back, {user?.email}</p>
+          <p className="text-secondary-600">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
         </div>
         <div className="flex items-center space-x-3">
           <Link
