@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { 
@@ -17,6 +18,7 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   // Profile settings
   const [profileData, setProfileData] = useState({
@@ -71,14 +73,94 @@ export function SettingsPage() {
     }, 5000)
   }
 
+  // Load user profile data on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return
+
+      try {
+        setLoading(true)
+        
+        // Fetch user profile from profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Error loading profile:', error)
+          // If profile doesn't exist, use user metadata
+          setProfileData(prev => ({
+            ...prev,
+            fullName: user.user_metadata?.full_name || '',
+            email: user.email || ''
+          }))
+        } else {
+          setProfileData(prev => ({
+            ...prev,
+            fullName: profile.full_name || '',
+            email: profile.email || user.email || ''
+          }))
+        }
+      } catch (err) {
+        console.error('Error loading user profile:', err)
+        // Fallback to user metadata
+        setProfileData(prev => ({
+          ...prev,
+          fullName: user.user_metadata?.full_name || '',
+          email: user.email || ''
+        }))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUserProfile()
+  }, [user])
+
   const handleSaveProfile = async () => {
+    if (!user) {
+      showMessage('User not authenticated', 'error')
+      return
+    }
+
+    if (!profileData.fullName.trim()) {
+      showMessage('Full name is required', 'error')
+      return
+    }
+
     try {
       setSaving(true)
-      // TODO: Implement profile update API call
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      
+      // Update user metadata in auth.users
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: profileData.fullName.trim()
+        }
+      })
+
+      if (authError) {
+        throw authError
+      }
+
+      // Update profile in profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.fullName.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (profileError) {
+        throw profileError
+      }
+
       showMessage('Profile updated successfully!', 'success')
     } catch (err) {
-      showMessage('Failed to update profile', 'error')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile'
+      showMessage(errorMessage, 'error')
     } finally {
       setSaving(false)
     }
@@ -218,6 +300,13 @@ export function SettingsPage() {
         {/* Content */}
         <div className="lg:col-span-3">
           <div className="card p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <span className="ml-3 text-secondary-600">Loading settings...</span>
+              </div>
+            ) : (
+              <>
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <div>
@@ -233,6 +322,7 @@ export function SettingsPage() {
                         value={profileData.fullName}
                         onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
                         placeholder="Enter your full name"
+                        disabled={saving}
                       />
                     </div>
                     
@@ -254,24 +344,29 @@ export function SettingsPage() {
                     
                     <div>
                       <label className="block text-sm font-medium text-secondary-700 mb-1">
-                        Bio
+                        Bio (Coming Soon)
                       </label>
                       <textarea
                         className="input w-full h-24 resize-none"
                         value={profileData.bio}
                         onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                         placeholder="Tell us about yourself"
+                        disabled
                       />
+                      <p className="text-xs text-secondary-500 mt-1">
+                        Bio field will be available after database schema update
+                      </p>
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-secondary-700 mb-1">
-                        Timezone
+                        Timezone (Coming Soon)
                       </label>
                       <select
                         className="input w-full"
                         value={profileData.timezone}
                         onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
+                        disabled
                       >
                         <option value="UTC">UTC</option>
                         <option value="America/New_York">Eastern Time</option>
@@ -279,6 +374,9 @@ export function SettingsPage() {
                         <option value="America/Denver">Mountain Time</option>
                         <option value="America/Los_Angeles">Pacific Time</option>
                       </select>
+                      <p className="text-xs text-secondary-500 mt-1">
+                        Timezone field will be available after database schema update
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -542,6 +640,8 @@ export function SettingsPage() {
                   </button>
                 </div>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>
