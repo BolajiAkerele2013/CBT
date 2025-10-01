@@ -32,10 +32,22 @@ function App() {
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/available-exams" element={<AvailableExamsPage />} />
                     <Route path="/exam-history" element={<ExamHistoryPage />} />
-                    <Route path="/exams/create" element={<ExamCreationPage />} />
-                    <Route path="/exams/:examId/edit" element={<ExamCreationPage />} />
+                    <Route path="/exams/create" element={
+                      <ProtectedRoute requireRole={['admin', 'creator']}>
+                        <ExamCreationPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/exams/:examId/edit" element={
+                      <ProtectedRoute requireRole={['admin', 'creator']}>
+                        <ExamCreationPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/exams/:examId/results" element={<ResultsPage />} />
-                    <Route path="/questions" element={<QuestionBankPage />} />
+                    <Route path="/questions" element={
+                      <ProtectedRoute requireRole={['admin', 'creator']}>
+                        <QuestionBankPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/users" element={
                       <ProtectedRoute requireRole={['admin', 'creator']}>
                         <UsersPage />

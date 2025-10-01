@@ -82,11 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    return { error }
+
+    if (error) {
+      return { error }
+    }
+
+    if (data.user) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('approved')
+        .eq('id', data.user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        return { error: profileError }
+      }
+
+      if (!profileData?.approved) {
+        await supabase.auth.signOut()
+        return {
+          error: {
+            message: 'Your account is pending approval. Please wait for an administrator to approve your account before you can log in.',
+            name: 'ApprovalPending'
+          } as any
+        }
+      }
+    }
+
+    return { error: null }
   }
 
   const signUp = async (email: string, password: string, fullName: string) => {

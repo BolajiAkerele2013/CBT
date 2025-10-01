@@ -24,8 +24,8 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Available Exams', href: '/available-exams', icon: Calendar },
     { name: 'Exam History', href: '/exam-history', icon: History },
-    { name: 'Create Exam', href: '/exams/create', icon: FileText },
-    { name: 'Question Bank', href: '/questions', icon: BookOpen },
+    { name: 'Create Exam', href: '/exams/create', icon: FileText, requireRole: ['admin', 'creator'] },
+    { name: 'Question Bank', href: '/questions', icon: BookOpen, requireRole: ['admin', 'creator'] },
     { name: 'Users', href: '/users', icon: Users, requireRole: ['admin', 'creator'] },
     { name: 'Settings', href: '/settings', icon: Settings },
   ]

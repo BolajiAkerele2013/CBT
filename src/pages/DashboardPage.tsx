@@ -2,22 +2,10 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useDashboard } from '../hooks/useDashboard'
 import { useExams } from '../hooks/useExams'
-import { 
-  Plus, 
-  FileText, 
-  Users, 
-  TrendingUp, 
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Trash2,
-  Edit,
-  BarChart3,
-  LogOut
-} from 'lucide-react'
+import { Plus, FileText, Users, TrendingUp, Clock, CheckCircle, AlertCircle, Trash2, FileEdit as Edit, BarChart3, LogOut } from 'lucide-react'
 
 export function DashboardPage() {
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const { stats, recentExams, loading, error } = useDashboard()
   const { deleteExam } = useExams()
 
@@ -118,13 +106,15 @@ export function DashboardPage() {
           <p className="text-secondary-600">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Link
-            to="/exams/create"
-            className="btn-primary px-4 py-2 flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create Exam</span>
-          </Link>
+          {profile?.role && ['admin', 'creator'].includes(profile.role) && (
+            <Link
+              to="/exams/create"
+              className="btn-primary px-4 py-2 flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Exam</span>
+            </Link>
+          )}
           <button
             onClick={handleSignOut}
             className="btn-outline px-4 py-2 flex items-center space-x-2 text-red-600 border-red-300 hover:bg-red-50"
@@ -259,46 +249,48 @@ export function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link
-          to="/exams/create"
-          className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
-        >
-          <div className="flex items-center">
-            <Plus className="h-8 w-8 text-primary-600" />
-            <div className="ml-4">
-              <h3 className="text-lg font-medium text-secondary-900">Create New Exam</h3>
-              <p className="text-sm text-secondary-500">Start building your next assessment</p>
+      {profile?.role && ['admin', 'creator'].includes(profile.role) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link
+            to="/exams/create"
+            className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center">
+              <Plus className="h-8 w-8 text-primary-600" />
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-secondary-900">Create New Exam</h3>
+                <p className="text-sm text-secondary-500">Start building your next assessment</p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <Link
-          to="/questions"
-          className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
-        >
-          <div className="flex items-center">
-            <FileText className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <h3 className="text-lg font-medium text-secondary-900">Question Bank</h3>
-              <p className="text-sm text-secondary-500">Manage your question library</p>
+          <Link
+            to="/questions"
+            className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-secondary-900">Question Bank</h3>
+                <p className="text-sm text-secondary-500">Manage your question library</p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
-        <Link
-          to="/users"
-          className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
-        >
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-purple-600" />
-            <div className="ml-4">
-              <h3 className="text-lg font-medium text-secondary-900">Manage Users</h3>
-              <p className="text-sm text-secondary-500">Handle user access and codes</p>
+          <Link
+            to="/users"
+            className="card p-6 hover:shadow-md transition-shadow cursor-pointer"
+          >
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-secondary-900">Manage Users</h3>
+                <p className="text-sm text-secondary-500">Handle user access and codes</p>
+              </div>
             </div>
-          </div>
-        </Link>
-      </div>
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

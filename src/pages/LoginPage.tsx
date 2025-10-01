@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
-  const { user, profile, signIn, signUp, loading } = useAuth()
+  const { user, signIn, signUp, loading } = useAuth()
   const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -40,10 +40,6 @@ export function LoginPage() {
           } else {
             setError(result.error.message)
           }
-        } else if (!profile?.approved) {
-          setError('Your account is pending approval. Please wait for an administrator to approve your account.')
-        } else if (redirectUrl) {
-          window.location.href = redirectUrl
         }
       } else {
         result = await signUp(email, password, fullName)
