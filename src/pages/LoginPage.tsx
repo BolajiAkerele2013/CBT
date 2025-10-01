@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
-  const { user, signIn, signUp, loading } = useAuth()
+  const { user, profile, signIn, signUp, loading } = useAuth()
   const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -12,6 +12,7 @@ export function LoginPage() {
   const [fullName, setFullName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Get redirect URL from search params
@@ -32,15 +33,33 @@ export function LoginPage() {
       let result
       if (isLogin) {
         result = await signIn(email, password)
+
+        if (result.error) {
+          if (result.error.message === 'Invalid login credentials') {
+            setError('Invalid email or password')
+          } else {
+            setError(result.error.message)
+          }
+        } else if (!profile?.approved) {
+          setError('Your account is pending approval. Please wait for an administrator to approve your account.')
+        } else if (redirectUrl) {
+          window.location.href = redirectUrl
+        }
       } else {
         result = await signUp(email, password, fullName)
-      }
 
-      if (result.error) {
-        setError(result.error.message)
-      } else if (isLogin && redirectUrl) {
-        // After successful login, redirect to the original URL
-        window.location.href = redirectUrl
+        if (result.error) {
+          setError(result.error.message)
+        } else {
+          setError('')
+          setSuccess('Account created successfully! Please wait for an administrator to approve your account before you can log in.')
+          setTimeout(() => {
+            setIsLogin(true)
+            setEmail('')
+            setPassword('')
+            setFullName('')
+          }, 3000)
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -150,6 +169,12 @@ export function LoginPage() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+
+          {success && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{success}</div>
             </div>
           )}
 

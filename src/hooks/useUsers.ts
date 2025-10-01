@@ -50,6 +50,54 @@ export function useUsers() {
     }
   }
 
+  const approveUser = async (userId: string) => {
+    if (!user) throw new Error('User not authenticated')
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          approved: true,
+          approved_at: new Date().toISOString(),
+          approved_by: user.id
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      await fetchUsers()
+      return data
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to approve user')
+    }
+  }
+
+  const rejectUser = async (userId: string) => {
+    if (!user) throw new Error('User not authenticated')
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          approved: false,
+          approved_at: null,
+          approved_by: null
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      await fetchUsers()
+      return data
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to reject user')
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [user])
@@ -59,6 +107,8 @@ export function useUsers() {
     loading,
     error,
     updateUserRole,
+    approveUser,
+    rejectUser,
     refetch: fetchUsers
   }
 }

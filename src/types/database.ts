@@ -7,6 +7,9 @@ export interface Database {
           email: string
           full_name: string | null
           role: 'creator' | 'editor' | 'admin' | 'user'
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           updated_at: string
         }
@@ -15,6 +18,9 @@ export interface Database {
           email: string
           full_name?: string | null
           role?: 'creator' | 'editor' | 'admin' | 'user'
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -23,6 +29,9 @@ export interface Database {
           email?: string
           full_name?: string | null
           role?: 'creator' | 'editor' | 'admin' | 'user'
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           updated_at?: string
         }

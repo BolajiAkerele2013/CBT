@@ -36,7 +36,11 @@ function App() {
                     <Route path="/exams/:examId/edit" element={<ExamCreationPage />} />
                     <Route path="/exams/:examId/results" element={<ResultsPage />} />
                     <Route path="/questions" element={<QuestionBankPage />} />
-                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/users" element={
+                      <ProtectedRoute requireRole={['admin', 'creator']}>
+                        <UsersPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/settings" element={<SettingsPage />} />
                   </Routes>
                 </Layout>

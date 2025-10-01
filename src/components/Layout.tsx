@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const location = useLocation()
 
   const navigation = [
@@ -26,9 +26,16 @@ export function Layout({ children }: LayoutProps) {
     { name: 'Exam History', href: '/exam-history', icon: History },
     { name: 'Create Exam', href: '/exams/create', icon: FileText },
     { name: 'Question Bank', href: '/questions', icon: BookOpen },
-    { name: 'Users', href: '/users', icon: Users },
+    { name: 'Users', href: '/users', icon: Users, requireRole: ['admin', 'creator'] },
     { name: 'Settings', href: '/settings', icon: Settings },
   ]
+
+  const filteredNavigation = navigation.filter(item => {
+    if (item.requireRole) {
+      return profile?.role && item.requireRole.includes(profile.role)
+    }
+    return true
+  })
 
   const isActive = (href: string) => {
     return location.pathname === href || location.pathname.startsWith(href + '/')
@@ -54,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
           
           <div className="mt-8 flex-grow flex flex-col">
             <nav className="flex-1 px-2 space-y-1">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link

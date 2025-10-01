@@ -1,17 +1,22 @@
 import { useState } from 'react'
 import { useUsers } from '../hooks/useUsers'
-import { 
-  Users as UsersIcon, 
+import {
+  Users as UsersIcon,
   Shield,
   Search,
-  AlertCircle
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react'
 
 export function UsersPage() {
-  const { users, loading, error, updateUserRole } = useUsers()
+  const { users, loading, error, updateUserRole, approveUser, rejectUser } = useUsers()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState<string>('all')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [updatingUser, setUpdatingUser] = useState<string | null>(null)
+  const [approvingUser, setApprovingUser] = useState<string | null>(null)
 
   const roles = [
     { value: 'all', label: 'All Roles' },
@@ -22,12 +27,15 @@ export function UsersPage() {
   ]
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+    const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesRole = selectedRole === 'all' || user.role === selectedRole
-    
-    return matchesSearch && matchesRole
+    const matchesStatus = selectedStatus === 'all' ||
+      (selectedStatus === 'approved' && user.approved) ||
+      (selectedStatus === 'pending' && !user.approved)
+
+    return matchesSearch && matchesRole && matchesStatus
   })
 
   const handleRoleUpdate = async (userId: string, newRole: 'creator' | 'editor' | 'admin' | 'user') => {
@@ -39,6 +47,32 @@ export function UsersPage() {
         alert(error instanceof Error ? error.message : 'Failed to update user role')
       } finally {
         setUpdatingUser(null)
+      }
+    }
+  }
+
+  const handleApprove = async (userId: string) => {
+    if (confirm('Are you sure you want to approve this user?')) {
+      try {
+        setApprovingUser(userId)
+        await approveUser(userId)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to approve user')
+      } finally {
+        setApprovingUser(null)
+      }
+    }
+  }
+
+  const handleReject = async (userId: string) => {
+    if (confirm('Are you sure you want to revoke approval for this user?')) {
+      try {
+        setApprovingUser(userId)
+        await rejectUser(userId)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to reject user')
+      } finally {
+        setApprovingUser(null)
       }
     }
   }
@@ -117,7 +151,7 @@ export function UsersPage() {
 
       {/* Filters */}
       <div className="card p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-secondary-700 mb-2">
               Search Users
@@ -148,6 +182,21 @@ export function UsersPage() {
                   {role.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-2">
+              Filter by Status
+            </label>
+            <select
+              className="input w-full"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending Approval</option>
             </select>
           </div>
         </div>
@@ -196,6 +245,9 @@ export function UsersPage() {
                     User
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
                     Current Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
@@ -227,6 +279,19 @@ export function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      {user.approved ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Approved
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
                           {user.role}
@@ -241,19 +306,45 @@ export function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <select
-                          value={user.role}
-                          onChange={(e) => handleRoleUpdate(user.id, e.target.value as any)}
-                          disabled={updatingUser === user.id}
-                          className="text-sm border border-secondary-300 rounded px-2 py-1 focus:ring-primary-500 focus:border-primary-500"
-                        >
-                          <option value="user">User</option>
-                          <option value="editor">Editor</option>
-                          <option value="admin">Admin</option>
-                          <option value="creator">Creator</option>
-                        </select>
-                        {updatingUser === user.id && (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                        {!user.approved ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(user.id)}
+                              disabled={approvingUser === user.id}
+                              className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Approve
+                            </button>
+                            {approvingUser === user.id && (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <select
+                              value={user.role}
+                              onChange={(e) => handleRoleUpdate(user.id, e.target.value as any)}
+                              disabled={updatingUser === user.id}
+                              className="text-sm border border-secondary-300 rounded px-2 py-1 focus:ring-primary-500 focus:border-primary-500"
+                            >
+                              <option value="user">User</option>
+                              <option value="editor">Editor</option>
+                              <option value="admin">Admin</option>
+                              <option value="creator">Creator</option>
+                            </select>
+                            <button
+                              onClick={() => handleReject(user.id)}
+                              disabled={approvingUser === user.id}
+                              className="inline-flex items-center px-2 py-1 border border-red-300 text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
+                              title="Revoke approval"
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </button>
+                            {(updatingUser === user.id || approvingUser === user.id) && (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>
