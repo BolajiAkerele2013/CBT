@@ -3,6 +3,8 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AvailableExamsPage } from './pages/AvailableExamsPage'
 import { ExamCreationPage } from './pages/ExamCreationPage'
@@ -20,6 +22,8 @@ function App() {
       <div className="min-h-screen bg-secondary-50">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/exam/:examId/take" element={<ExamTakingPage />} />
           <Route path="/exam/:examId/result" element={<ExamResultPage />} />
           <Route

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
@@ -163,6 +163,17 @@ export function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {isLogin && (
+              <div className="flex items-center justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-primary-600 hover:text-primary-500"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
           </div>
 
           {authError && (
