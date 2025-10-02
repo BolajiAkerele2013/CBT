@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   profile: any | null
+  authError: string | null
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const checkUserApproval = async (userId: string) => {
     try {
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Error fetching profile:', profileError)
+        setAuthError('Failed to load user profile. Please try again.')
         setLoading(false)
         return
       }
@@ -46,29 +49,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     } catch (err) {
       console.error('Error checking approval:', err)
+      setAuthError('An unexpected error occurred. Please refresh the page.')
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    let mounted = true
 
-      if (session?.user) {
-        await checkUserApproval(session.user.id)
-      } else {
+    // Set a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.error('Authentication initialization timeout')
+        setAuthError('Failed to initialize authentication. Please check your connection and refresh the page.')
         setLoading(false)
       }
-    })
+    }, 10000) // 10 second timeout
+
+    // Get initial session
+    supabase.auth.getSession()
+      .then(async ({ data: { session }, error }) => {
+        if (!mounted) return
+
+        if (error) {
+          console.error('Error getting session:', error)
+          setAuthError('Failed to connect to authentication service. Please check your connection.')
+          setLoading(false)
+          clearTimeout(loadingTimeout)
+          return
+        }
+
+        setSession(session)
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          await checkUserApproval(session.user.id)
+        } else {
+          setLoading(false)
+        }
+
+        clearTimeout(loadingTimeout)
+      })
+      .catch((err) => {
+        if (!mounted) return
+        console.error('Unexpected error during session initialization:', err)
+        setAuthError('Failed to initialize authentication. Please refresh the page.')
+        setLoading(false)
+        clearTimeout(loadingTimeout)
+      })
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return
+
       setSession(session)
       setUser(session?.user ?? null)
+      setAuthError(null)
 
       if (session?.user) {
         await checkUserApproval(session.user.id)
@@ -78,7 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      clearTimeout(loadingTimeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -138,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     profile,
     loading,
+    authError,
     signIn,
     signUp,
     signOut,

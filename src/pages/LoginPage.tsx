@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
-  const { user, signIn, signUp, loading } = useAuth()
+  const { user, signIn, signUp, loading, authError } = useAuth()
   const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -66,8 +66,11 @@ export function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-secondary-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-sm text-secondary-600">Loading authentication...</p>
+        </div>
       </div>
     )
   }
@@ -161,6 +164,13 @@ export function LoginPage() {
               </div>
             </div>
           </div>
+
+          {authError && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-4">
+              <div className="text-sm text-red-700 font-medium">Connection Error</div>
+              <div className="text-sm text-red-600 mt-1">{authError}</div>
+            </div>
+          )}
 
           {error && (
             <div className="rounded-md bg-red-50 p-4">
