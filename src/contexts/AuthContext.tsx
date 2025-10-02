@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
 
-  const checkUserApproval = async (userId: string) => {
+  const loadUserProfile = async (userId: string) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -40,17 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProfile(profileData)
-
-      if (!profileData?.approved) {
-        await supabase.auth.signOut()
-        setUser(null)
-        setSession(null)
-        setProfile(null)
-      }
-
       setLoading(false)
     } catch (err) {
-      console.error('Error checking approval:', err)
+      console.error('Error loading profile:', err)
       setAuthError('An unexpected error occurred. Please refresh the page.')
       setLoading(false)
     }
@@ -85,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          await checkUserApproval(session.user.id)
+          await loadUserProfile(session.user.id)
         } else {
           setLoading(false)
         }
@@ -111,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthError(null)
 
       if (session?.user) {
-        await checkUserApproval(session.user.id)
+        await loadUserProfile(session.user.id)
       } else {
         setProfile(null)
         setLoading(false)
@@ -143,10 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle()
 
       if (profileError) {
+        console.error('Profile fetch error during sign in:', profileError)
+        await supabase.auth.signOut()
         return { error: profileError }
       }
 
-      if (!profileData?.approved) {
+      if (!profileData || !profileData.approved) {
         await supabase.auth.signOut()
         return {
           error: {
@@ -201,11 +195,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle()
 
       if (profileError) {
+        console.error('Profile fetch error during password update:', profileError)
         await supabase.auth.signOut()
         return { error: profileError }
       }
 
-      if (!profileData?.approved) {
+      if (!profileData || !profileData.approved) {
         await supabase.auth.signOut()
         return {
           error: {
