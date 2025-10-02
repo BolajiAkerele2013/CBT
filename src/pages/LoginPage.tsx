@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
 
 export function LoginPage() {
-  const { user, signIn, signUp, loading, authError } = useAuth()
+  const { user, profile, signIn, signUp, loading, authError } = useAuth()
   const [searchParams] = useSearchParams()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
@@ -18,8 +18,8 @@ export function LoginPage() {
   // Get redirect URL from search params
   const redirectUrl = searchParams.get('redirect')
 
-  // If user is already logged in, redirect them
-  if (user) {
+  // If user is already logged in and approved, redirect them
+  if (user && profile?.approved) {
     // If there's a redirect URL, use it; otherwise go to dashboard
     return <Navigate to={redirectUrl || "/dashboard"} replace />
   }

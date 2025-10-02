@@ -22,6 +22,10 @@ export function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />
   }
 
+  if (!profile?.approved) {
+    return <Navigate to="/login" replace />
+  }
+
   if (requireRole && profile && !requireRole.includes(profile.role)) {
     return <Navigate to="/dashboard" replace />
   }
